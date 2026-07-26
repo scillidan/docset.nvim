@@ -15,6 +15,8 @@ M.opts = {
   },
   preview_max_lines = 200,
   online_url = nil,
+  include_documents = nil,
+  exclude_documents = nil,
 }
 
 function M.default_docset_dirs()

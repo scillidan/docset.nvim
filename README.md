@@ -15,12 +15,6 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
 - Zeal/Dash docsets (`.docset`)
 - [fzf-lua](https://github.com/ibhagwan/fzf-lua) (default) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
 
-## Requirements
-
-- Neovim 0.10+
-- Zeal/Dash docsets (`.docset`)
-- [fzf-lua](https://github.com/ibhagwan/fzf-lua) (default) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
-
 ## Install
 
 ```lua
@@ -35,6 +29,8 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
       --   Windows (scoop): ~/Scoop/apps/zeal/current/docsets
       --   Windows (official installer): ~/AppData/Local/Zeal/Zeal/docsets
       docset_dirs = { vim.fn.expand("~/AppData/Local/Zeal/Zeal/docsets") }, -- Required
+      include_documents = {}, -- e.g. "Bash", "LaTeX"
+      exclude_documents = {}, -- e.g. "Linux Man Pages"
       browser = "reader", -- Required. Or { { "reader", "--image-mode", "none" }, "elinks" }
       picker = "fzf", -- Or "telescope"
       highlights = {

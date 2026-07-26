@@ -69,7 +69,10 @@ end
 
 function M.setup(opts)
   config.setup(opts)
-  _docsets = docset.discover(config.opts.docset_dirs)
+  _docsets = docset.discover(config.opts.docset_dirs, {
+    include = config.opts.include_documents,
+    exclude = config.opts.exclude_documents,
+  })
   if #_docsets == 0 then
     notify("No Zeal docsets found in configured directories", vim.log.levels.WARN)
   end

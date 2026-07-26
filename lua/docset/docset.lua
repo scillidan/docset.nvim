@@ -2,8 +2,23 @@ local M = {}
 local utils = require("docset.utils")
 local plist = require("docset.plist")
 
--- Search for .docset bundles. Multi dirs supported; non-recursive (one level deep).
-function M.discover(dirs)
+local function build_exclude_set(list)
+  if not list or #list == 0 then
+    return nil
+  end
+  local set = {}
+  for _, name in ipairs(list) do
+    set[name] = true
+  end
+  return set
+end
+
+function M.discover(dirs, filter)
+  local include = filter and filter.include
+  if include and #include == 0 then
+    include = nil
+  end
+  local exclude = build_exclude_set(filter and filter.exclude)
   local docsets = {}
   for _, dir in ipairs(dirs) do
     dir = utils.normalize_path(vim.fn.expand(dir))
@@ -13,7 +28,11 @@ function M.discover(dirs)
       for _, path in ipairs(matches) do
         local ds = M.parse(path)
         if ds then
-          table.insert(docsets, ds)
+          local t = ds.title or ds.name
+          if (not include or vim.tbl_contains(include, t))
+            and not (exclude and exclude[t]) then
+            table.insert(docsets, ds)
+          end
         end
       end
     end
