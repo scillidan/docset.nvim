@@ -2,6 +2,7 @@ local M = {}
 local utils = require("docset.utils")
 local plist = require("docset.plist")
 
+-- Search for .docset bundles. Multi dirs supported; non-recursive (one level deep).
 function M.discover(dirs)
   local docsets = {}
   for _, dir in ipairs(dirs) do

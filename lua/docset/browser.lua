@@ -1,18 +1,6 @@
 local M = {}
 local utils = require("docset.utils")
 
-M.known_browsers = {
-  reader = function(file)
-    return { "reader", "--image-mode", "none", file }
-  end,
-  elinks = function(file)
-    return { "elinks", file }
-  end,
-  lynx = function(file)
-    return { "lynx", file }
-  end,
-}
-
 -- Container state: shared across all doc reads.
 -- type: "float" | "tab" | "vsplit" | "split"
 -- win: container window handle
@@ -21,51 +9,57 @@ M.known_browsers = {
 -- index: currently shown buffer index
 local _c = nil
 
-function M.detect()
-  for _, name in ipairs({ "reader", "elinks", "lynx" }) do
-    if vim.fn.executable(name) == 1 then
-      return name
+local function normalize_browser_list(browsers)
+  if type(browsers) ~= "table" then
+    return { browsers }
+  end
+  if type(browsers[1]) == "table" then
+    return browsers
+  end
+  if #browsers > 1 then
+    for i = 2, #browsers do
+      if type(browsers[i]) == "string" and browsers[i]:sub(1, 1) == "-" then
+        return { browsers }
+      end
     end
   end
-  return nil
-end
-
-function M.resolve_name(browser)
-  if browser == "auto" then
-    return M.detect()
-  end
-  if type(browser) == "string" and M.known_browsers[browser] then
-    return browser
-  end
-  if type(browser) == "table" or (type(browser) == "string" and browser ~= "auto") then
-    return "custom"
-  end
-  return nil
+  return browsers
 end
 
 function M.build_command(browser, file)
-  local resolved = M.resolve_name(browser)
-  if resolved == nil then
-    return nil
-  end
-  if resolved == "custom" then
-    if type(browser) == "table" then
-      local cmd = vim.deepcopy(browser)
-      local has_file = false
-      for i, arg in ipairs(cmd) do
-        if arg == "{file}" then
-          cmd[i] = file
-          has_file = true
-        end
+  if type(browser) == "table" then
+    local cmd = vim.deepcopy(browser)
+    local has_file = false
+    for i, arg in ipairs(cmd) do
+      if arg == "{file}" then
+        cmd[i] = file
+        has_file = true
       end
-      if not has_file then
-        table.insert(cmd, file)
-      end
-      return cmd
     end
+    if not has_file then
+      table.insert(cmd, file)
+    end
+    return cmd
+  end
+  if type(browser) == "string" and browser ~= "" then
     return { browser, file }
   end
-  return M.known_browsers[resolved](file)
+  return nil
+end
+
+--- Try each browser in order; return command of first whose executable exists.
+function M.resolve_first(browsers, file)
+  local list = normalize_browser_list(browsers)
+  for _, b in ipairs(list) do
+    local cmd = M.build_command(b, file)
+    if cmd then
+      local exe = type(b) == "table" and b[1] or b
+      if vim.fn.executable(exe) == 1 then
+        return cmd
+      end
+    end
+  end
+  return M.build_command(list[1], file)
 end
 
 local _preview_cache = {}
@@ -81,7 +75,7 @@ function M.preview_text(entry)
   file = file:gsub("#.*$", "") -- strip fragment
 
   local cfg = require("docset.config").opts
-  local cmd = M.build_command(cfg.browser, file)
+  local cmd = M.resolve_first(cfg.browser, file)
   if not cmd then
     return "No browser configured"
   end
@@ -150,8 +144,8 @@ local function focus_container()
   return true
 end
 
-local function parse_mode(doc_window)
-  local mode = doc_window.mode
+local function parse_mode(window)
+  local mode = window.mode
   if type(mode) == "string" then
     return mode, {}
   end
@@ -182,7 +176,7 @@ end
 
 local function create_container(cfg)
   clear_state()
-  local split, opts = parse_mode(cfg.doc_window)
+  local split, opts = parse_mode(cfg.window)
   _c = { type = split, bufs = {}, index = 0 }
 
   if split == "float" then
@@ -227,7 +221,7 @@ local function create_container(cfg)
 end
 
 local function ensure_container(cfg)
-  local split, _ = parse_mode(cfg.doc_window)
+  local split, _ = parse_mode(cfg.window)
   if container_valid() and _c.type == split then
     focus_container()
     return
@@ -242,7 +236,7 @@ end
 local function create_doc_item(entry)
   local cfg = require("docset.config").opts
   local file = file_for_entry(entry)
-  local cmd = M.build_command(cfg.browser, file)
+  local cmd = M.resolve_first(cfg.browser, file)
   if not cmd then
     return nil
   end

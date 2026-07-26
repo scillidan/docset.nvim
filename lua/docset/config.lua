@@ -2,15 +2,9 @@ local M = {}
 
 M.opts = {
   docset_dirs = {},
-  picker = "fzf", -- telescope | fzf
-  browser = "", -- see README "Terminal web browsers"
-  doc_window = {
-    -- Web-reader container mode: { split_type, opts }
-    -- Examples:
-    --   { "float",  { width = 0.8, height = 0.85 } }
-    --   { "split",  { position = "below" } }
-    --   { "vsplit", { position = "right" } }
-    --   { "tab" }
+  picker = "fzf",
+  browser = "",
+  window = {
     mode = { "float", { width = 0.8, height = 0.85 } },
   },
   highlights = {
@@ -38,9 +32,6 @@ function M.setup(opts)
   M.opts = vim.tbl_deep_extend("force", M.opts, opts or {})
   if type(M.opts.docset_dirs) == "function" then
     M.opts.docset_dirs = M.opts.docset_dirs()
-  end
-  if #M.opts.docset_dirs == 0 then
-    M.opts.docset_dirs = M.default_docset_dirs()
   end
 end
 

@@ -5,7 +5,7 @@ Read Zeal/Dash docsets inside Neovim.
 Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
 
 - Fuzzy picker via [fzf-lua](https://github.com/ibhagwan/fzf-lua) (default) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
-- HTML preview through terminal readers (`reader`, `elinks`, `lynx`)
+- HTML preview through any terminal browser you configure
 - Single reusable container: float / tab / split
 - Multiple docs become buffers in the same container
 
@@ -14,31 +14,29 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
 ```lua
 {
   "scillidan/docset.nvim",
-  dependencies = { "ibhagwan/fzf-lua" },
+  dependencies = { "ibhagwan/fzf-lua" }, -- or "nvim-telescope/telescope.nvim"
   config = function()
     require("docset").setup({
-      -- docset_dirs is not set in this example; set it for your platform/install method:
+      -- Required. Multiple paths supported. Set it for your platform/install method:
       --   Linux: ~/.local/share/Zeal/Zeal/docsets
       --   Windows (scoop): ~/Scoop/apps/zeal/current/docsets
       --   Windows (official installer): ~/AppData/Local/Zeal/Zeal/docsets
       docset_dirs = { vim.fn.expand("~/AppData/Local/Zeal/Zeal/docsets") },
-
-      -- doc_window = {
-      --   mode = { "float", { width = 0.8, height = 0.85 } }, -- default
-      --   -- mode = { "split", { position = "below" } },
-      --   -- mode = { "vsplit", { position = "right" } },
-      --   -- mode = { "tab" },
-      -- },
-      -- Or other terminal web browsers liked elinks,lynx, w3m ...
-      browser = "reader",
-      picker = "fzf", -- fzf (default) | telescope
+      browser = "reader", -- Required. Or { { "reader", "--image-mode", "none" }, "elinks" }
+      picker = "fzf", -- Default. Or "telescope"
       -- highlights = {
       --   tab = "TabLine",
       --   tab_active = "TabLineSel",
       --   entry_type = "Comment",
       --   entry_docset = "Comment",
       -- },
-      -- preview_max_lines = 200, -- 0 = unlimited
+      -- preview_max_lines = 200, -- 0 for unlimited
+      window = {
+        mode = { "float", { width = 0.8, height = 0.85 } }, -- Default. Or
+        -- mode = { "split", { position = "below" } },
+        -- mode = { "vsplit", { position = "right" } },
+        -- mode = { "tab" },
+      },
     })
   end,
 }
@@ -47,9 +45,9 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
 ## Usage
 
 ```lua
-vim.keymap.set("n", "<Leader>D", "<Cmd>Docset<CR>", { desc = "Docset picker" })        -- open picker
-vim.keymap.set("n", "<Leader>d", "<Cmd>DocsetLookup<CR>", { desc = "Docset lookup word" })  -- lookup cursor word
-vim.keymap.set("v", "<Leader>d", function()
+vim.keymap.set("n", "<leader>D", "<Cmd>Docset<CR>", { desc = "Docset picker" })        -- open picker
+vim.keymap.set("n", "<leader>d", "<Cmd>DocsetLookup<CR>", { desc = "Docset lookup word" })  -- lookup cursor word
+vim.keymap.set("v", "<leader>d", function()
   local mode = vim.fn.visualmode()
   local word = vim.fn.getregion(vim.fn.getpos("'<"), vim.fn.getpos("'>"), { type = mode })[1]
   if word and word ~= "" then
