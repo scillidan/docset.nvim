@@ -119,12 +119,21 @@ function M.open(entries, opts)
   local type_hl = hl.entry_type or "Comment"
   local docset_hl = hl.entry_docset or "Comment"
 
-  -- Compute the widest [type] string across all entries so the type column
-  -- is left-aligned and has no unnecessary trailing space.
-  local max_type_len = 0
+  -- Compute median type width so one anomalously long type doesn't waste space.
+  local type_lens = {}
+  local docset_lens = {}
   for _, e in ipairs(entries) do
-    max_type_len = math.max(max_type_len, vim.fn.strdisplaywidth("[" .. e.type .. "]"))
+    table.insert(type_lens, vim.fn.strdisplaywidth("[" .. e.type .. "]"))
+    table.insert(docset_lens, vim.fn.strdisplaywidth(e.docset.title or e.docset.name))
   end
+  table.sort(type_lens)
+  table.sort(docset_lens)
+  local function mid(t)
+    if #t == 0 then return 0 end
+    return t[math.ceil(#t / 2)]
+  end
+  local type_width = math.max(6, math.min(mid(type_lens), 16))
+  local docset_width = math.max(8, math.min(mid(docset_lens), 22))
 
   -- Use telescope's entry_display so type/docset columns are always visible
   -- even when the entry name is long and the results window is narrow.
@@ -132,16 +141,23 @@ function M.open(entries, opts)
     separator = "  ",
     items = {
       { width = 35 },
-      { width = max_type_len },
+      { width = type_width },
       { remaining = true },
     },
   })
 
+  local function trunc(str, w)
+    if vim.fn.strdisplaywidth(str) > w then
+      return str:sub(1, math.max(1, w - 1)) .. "…"
+    end
+    return str
+  end
+
   local function make_display(entry)
     return displayer({
       entry.name,
-      { "[" .. entry.type .. "]", type_hl },
-      { entry.docset.title or entry.docset.name, docset_hl },
+      { trunc("[" .. entry.type .. "]", type_width), type_hl },
+      { trunc(entry.docset.title or entry.docset.name, docset_width), docset_hl },
     })
   end
 

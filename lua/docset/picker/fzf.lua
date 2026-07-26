@@ -26,34 +26,44 @@ local function hl_to_ansi(hl_name, attrs)
   return string.format("\27[%sm", table.concat(codes, ";"))
 end
 
-local NAME_WIDTH = 30
-local TYPE_WIDTH = 12
+local function median_widths(entries)
+  local type_lens = {}
+  local docset_lens = {}
+  for _, e in ipairs(entries) do
+    table.insert(type_lens, vim.fn.strdisplaywidth("[" .. e.type .. "]"))
+    table.insert(docset_lens, vim.fn.strdisplaywidth(e.docset.title or e.docset.name))
+  end
+  table.sort(type_lens)
+  table.sort(docset_lens)
+  local function mid(t)
+    if #t == 0 then return 0 end
+    return t[math.ceil(#t / 2)]
+  end
+  return {
+    type = math.max(6, math.min(mid(type_lens), 16)),
+    docset = math.max(8, math.min(mid(docset_lens), 22)),
+  }
+end
 
 local function pad_right(str, width)
   local w = vim.fn.strdisplaywidth(str)
   if w > width then
-    return str:sub(1, width - 1) .. "…"
+    return str:sub(1, math.max(1, width - 1)) .. "…"
   end
   return str .. string.rep(" ", width - w)
 end
 
--- Returns the name column and the type/docset column as separate fields so
--- fzf's search scope (--nth) can be restricted to the name; docset and type
--- are matched via the filter syntax instead.
-local function format_entry(entry, cfg)
+local function format_entry(entry, cfg, widths)
   local hl = cfg.highlights or {}
   local type_ansi = hl_to_ansi(hl.entry_type or "Comment", { dim = true })
   local docset_ansi = hl_to_ansi(hl.entry_docset or "Comment", { dim = true })
   local reset = "\27[0m"
   local docset_name = entry.docset.title or entry.docset.name
-  local type_text = "[" .. entry.type .. "]"
 
-  local type_pad = TYPE_WIDTH - vim.fn.strdisplaywidth(type_text)
-  if type_pad < 0 then type_pad = 0 end
-
-  local name_part = pad_right(entry.name, NAME_WIDTH)
-  local meta_part = type_ansi .. type_text .. reset .. string.rep(" ", type_pad)
-    .. "  " .. docset_ansi .. docset_name .. reset .. " "
+  local name_part = pad_right(entry.name, widths.name)
+  local type_part = pad_right("[" .. entry.type .. "]", widths.type)
+  local docset_part = pad_right(docset_name, widths.docset)
+  local meta_part = type_ansi .. type_part .. reset .. " " .. docset_ansi .. docset_part .. reset
   return name_part, meta_part
 end
 
@@ -83,11 +93,22 @@ function M.open(entries, opts)
   end
 
   local shown = filter.filter_entries(entries, filters)
+  local widths = median_widths(entries)
+
+  local results_w = math.floor(vim.o.columns * 0.35)
+  results_w = math.max(results_w, 30)
+  local meta_w = widths.type + 1 + widths.docset + 2
+  local name_w = math.max(8, results_w - meta_w)
+  if name_w < 8 then
+    widths.docset = math.max(8, widths.docset + name_w - 4)
+    meta_w = widths.type + 1 + widths.docset + 2
+    name_w = math.max(8, results_w - meta_w)
+  end
+  widths.name = name_w
 
   local function contents(cb)
     for i, entry in ipairs(shown) do
-      -- Fields: 1 = name column (searched), 2 = type/docset column, 3 = index
-      local name_part, meta_part = format_entry(entry, cfg)
+      local name_part, meta_part = format_entry(entry, cfg, widths)
       cb(name_part .. "\t" .. meta_part .. "\t" .. i)
     end
     cb(nil)
@@ -141,9 +162,6 @@ function M.open(entries, opts)
       ["--ansi"] = true,
       ["--multi"] = true,
       ["--delimiter"] = "\\t",
-      -- NOTE: --nth applies to the --with-nth-transformed line, so the
-      -- display fields are arranged as { name, type/docset } and search is
-      -- limited to the name column only.
       ["--with-nth"] = "1,2",
       ["--nth"] = "1",
       ["--header"] = filter.build_header("C-f filter | C-r reset | C-q quit", filters, #shown),
