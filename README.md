@@ -14,6 +14,7 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
 - Neovim 0.10+
 - Zeal/Dash docsets (`.docset`)
 - [fzf-lua](https://github.com/ibhagwan/fzf-lua) (default) or [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+- A terminal browser: [reader](https://github.com/mrusme/reader), [elinks](https://github.com/rkd77/elinks), [lynx](https://invisible-island.net/lynx/lynx.html), [w3m](https://invisible-island.net/lynx/lynx.html), etc.
 
 ## Install
 
@@ -31,7 +32,7 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
       docset_dirs = { vim.fn.expand("~/AppData/Local/Zeal/Zeal/docsets") }, -- Required
       include_documents = {}, -- e.g. "Bash", "LaTeX"
       exclude_documents = {}, -- e.g. "Linux Man Pages"
-      browser = "reader", -- Required. Or { { "reader", "--image-mode", "none" }, "elinks" }
+      browser = "", -- "reader" or { { "reader", "--image-mode", "none" }, "elinks" }
       picker = "fzf", -- Or "telescope"
       highlights = {
         tab = "TabLine",
@@ -65,19 +66,19 @@ vim.keymap.set("v", "<leader>d", function()
 end, { desc = "Docset lookup selection" })
 ```
 
-In the picker:
+### In the fzf picker
 
 - Type `docset:`, `docset:type`, or `docset:type content` in the search box to filter. Multiple docsets/types separated by `,` (e.g. `lua,bash:function,guide ver`).
 - `Enter` applies the filter when the query contains filter syntax (fzf), otherwise opens the selection.
 - `C-f` applies the current query as a filter.
 - `C-r` resets filters and the search text, back to the full entry list.
-- Search matches entry names only; docset and type columns are matched via the filter syntax.
+- Search matches entry names only; `docset` and `type` columns are matched via the filter syntax.
 - Content search matches whole words in any order: `node 3` matches `Node3D`, `soft 3D` matches `SoftBody3D`
 
-In the browser:
+### In the browser
 
 | Key | Action |
-| :-- | :-- |
+| :- | :- |
 | `H` / `L` | Previous / next doc buffer |
 | `d` | Close current doc buffer |
 | `q` | Close reader container |
