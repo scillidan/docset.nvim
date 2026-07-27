@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/docset-nvim.png" alt="docset-nvim" width="800" />
+  <img src="assets/docset-nvim.png" alt="docset.nvim" width="800" />
 </div>
 
 # docset.nvim
