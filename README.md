@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/docset-nvim.png" alt="docset-nvim" width="800" />
+</div>
+
 # docset.nvim
 
 Read Zeal/Dash docsets inside Neovim.
