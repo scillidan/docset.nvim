@@ -36,7 +36,7 @@ Authors: Kimi-K3🧙‍♂️, Kimi-K2.7-Code🧙‍♂️, scillidan🤡
       docset_dirs = { vim.fn.expand("~/AppData/Local/Zeal/Zeal/docsets") }, -- Required
       include_documents = {}, -- e.g. "Bash", "LaTeX"
       exclude_documents = {}, -- e.g. "Linux Man Pages"
-      browser = "", -- "reader" or { { "reader", "--image-mode", "none" }, "links" }
+      browser = "", -- "reader" or { { "reader", "--image-mode", "none" }, { "links", "-dump" } }
       picker = "fzf", -- Or "telescope"
       highlights = {
         tab = "TabLine",
